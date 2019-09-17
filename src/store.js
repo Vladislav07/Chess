@@ -4,7 +4,14 @@ import Vuex from "vuex";
 Vue.use(Vuex);
 
 export default new Vuex.Store({
-  state: {},
+  state: {
+    position:'rnbqkbnrpppppppp11111111111111111111111111111111PPPPPPPPRNBQKBNR'
+  },
   mutations: {},
-  actions: {}
+  actions: {},
+  getters:{
+    getFirstPosition(state){
+      return state.position;
+    }
+  }
 });
