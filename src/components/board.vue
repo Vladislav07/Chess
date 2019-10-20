@@ -1,90 +1,118 @@
 <template>
-  <div class="board">
+  <div class="board" @mousemove="moveAt($event)">
     <div
+      @mouseup="setDroppable(index)"
       class="square"
       :class="isBlackSquareAt(index) ?'black':'white'"
       v-for="(item, index) in squeres"
       :key="index"
       :style="item"
-      ref="numbers"
-    ></div>
-    <input class="buttonNew" type="button" value="New" @click="newFigures" />
-    <input class="buttonFlip" type="button" value="New" @click="flipBoard" />
+      :id="index"
+    >
+      <figure-my :id="index" :figureview="showFigureAt(index)"></figure-my>
+    </div>
   </div>
 </template>
 <script>
 import store from "../store";
+import figureMy from "./figure";
+import {bus} from "./bus.js";
 export default {
   name: "board",
   data() {
     return {
       squeres: [],
       isFlipped: false,
-      figures: "", //'rnbqkbnrpppppppp11111111111111111111111111111111PPPPPPPPRNBQKBNR',
       map: {},
-      numbers: []
+      numbers: [],
+      x: "",
+      y: "",
+      el: "",
+      isDraving:false,
+      isShow:true
     };
   },
+ 
   methods: {
     isBlackSquareAt(coord) {
       return ((coord % 8) + Math.floor(coord / 8)) % 2;
     },
-    newFigures() {
-      for (var coord = 0; coord < 64; coord++) {
-        var fig = this.figures;
-        this.showFigureAt(coord, fig.charAt(coord));
-      }
-    },
-    showFigureAt(coord, figure) {
+    showFigureAt(coord) {
+     
+      var figure = this.figures[coord];
+     
       if (this.map[coord] == figure) return;
       this.map[coord] = figure;
-      this.$refs.numbers[coord].innerHTML ='<div id="f$coord" class="figure">$figure</div>'// this.getChessSymbole(figure);
+
+      return figure;
 
       // setDraggable();
     },
-    getChessSymbole(figure) {
-      switch (figure) {
-        case "K":
-          return "&#9812;";
-        case "Q":
-          return "&#9813;";
-        case "R":
-          return "&#9814;";
-        case "B":
-          return "&#9815;";
-        case "N":
-          return "&#9816;";
-        case "P":
-          return "&#9817;";
-        case "k":
-          return "&#9818;";
-        case "q":
-          return "&#9819;";
-        case "r":
-          return "&#9820;";
-        case "b":
-          return "&#9821;";
-        case "n":
-          return "&#9822;";
-        case "p":
-          return "&#9823;";
-        default:
-          return "";
+    moveAt(e) {
+      if (this.isDraving) {
+        this.x = e.pageX;
+        this.y = e.pageY;
+        // console.log(this.x,this.y);
+        bus.$emit("setCoord", { top: this.y, left: this.x });
       }
+    },
+    setDroppable(e) {
+      if(this.isDraving){
+      var to=e;
+      var from= this.el.id;
+      
+      this.ChessMove(from, to);
+      bus.$emit("setNewPosFigure");
+      this.el='';
+      this.isDraving=false;
+      }
+    },
+    Drag(e) {
+     this.isDraving=true;
+      this.el = e;
+    },
+    ChessMove(from, to){
+    
+       var figure= this.map[this.el.id];
+    
+       var peyLoad={'figure':figure,'from':from, 'to':to};
+       console.log(peyLoad);
+       this.$store.commit('moveFigure',peyLoad);
     }
   },
   created: function() {
-    var board = [];
+    var board = {};
     for (var coord = 0; coord < 64; coord++) {
       var square = {};
-
-      board.push(square);
+    
+      board[coord]=coord;
     }
     this.squeres = board;
+     bus.$on('setDrag', this.Drag);
   },
-  mounted() {
-    this.figures = store.getters.getFirstPosition;
-  }
+ 
+  components: {
+    figureMy
+   
+  },
+   computed:{
+   figures() {
+     var s=0;
+     var pos={};
+    var array=this.$store.getters.getFirstPosition;
+     for (let index = 0; index < array.length; index++) {
+      // debugger;
+       var value= array.charAt(index);
+       pos[index]=value;
+       s++;
+     }
+       
+     console.log(s);
+
+    return pos;
+    
+     }
+   }
 };
 </script>
 <style scoped>
@@ -107,9 +135,7 @@ export default {
 .white {
   background-color: #eee;
 }
-.figure {
-  font-size: 60px;
-}
+
 .buttonNew {
   margin-top: 100px;
 }
