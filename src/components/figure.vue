@@ -64,11 +64,13 @@ export default {
  
   computed: {
     dynamicStyleObjec() {
+
       if (this.isDragging) {
         return {
           position: "absolute",
           top: this.y + "px",
-          left: this.x + "px"
+          left: this.x + "px",
+        
         };
       } else {
 
@@ -76,6 +78,7 @@ export default {
        }
       
     }
+    
   },
   mounted() {
     bus.$on("setCoord", coord => {
@@ -97,6 +100,11 @@ export default {
 <style>
 .figure {
   font-size: 60px;
+  
+
 }
+ div.figure :focus{
+   outline: none;
+ }
 </style>
 
